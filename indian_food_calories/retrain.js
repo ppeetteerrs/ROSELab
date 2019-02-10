@@ -84,18 +84,19 @@ async function prompt() {
         default: 20000
     }]);
     let fullName = getDirName(name, tfhubModule.name);
-    generateCommand(fullName, imageDir, tfhubModule, trainBatchSize, valBatchSize, flipImage, randomScale, randomCrop, randomBrightness, trainingSteps);
+    await generateCommand(fullName, imageDir, tfhubModule, trainBatchSize, valBatchSize, flipImage, randomScale, randomCrop, randomBrightness, trainingSteps);
 }
 
 function getDirName(name, model) {
     return `${model}_${name}`;
 }
 
-function generateCommand(fullName, imageDir, tfhubModule, trainBatchSize, valBatchSize, flipImage, randomScale, randomCrop, randomBrightness, trainingSteps) {
+async function generateCommand(fullName, imageDir, tfhubModule, trainBatchSize, valBatchSize, flipImage, randomScale, randomCrop, randomBrightness, trainingSteps) {
     let tfCommandString = `python scripts/retrain.py --image_dir ${imageDir} --tfhub_module ${tfhubModule.url} --saved_model_dir ./retrained/models/${fullName}/model --bottleneck_dir ./retrained/bottlenecks/${tfhubModule.name} --how_many_training_steps=${trainingSteps} --train_batch_size=${trainBatchSize} --validation_batch_size=${valBatchSize} --summaries_dir ./retrained/logs/${fullName} --output_labels ./retrained/models/${fullName}/labels.txt --intermediate_store_frequency=1000 --intermediate_output_graphs_dir ./retrained/models/${fullName}/intermediate --output_graph ./retrained/models/${fullName}/graph.pb ${flipImage ? "--flip_left_right " : ""}--random_crop=${randomCrop} --random_scale=${randomScale} --random_brightness=${randomBrightness}`;
-    console.log("Training started...");
     let tbCommandString = `tensorboard --logdir ./retrained/logs/${fullName}`;
     fs.writeFileSync(path.join(__dirname, 'retrained/retrain.sh'), "#!/usr/bin/env bash\n" + tfCommandString + " && " + tbCommandString);
+    await shelljs.exec("pm2 start retrained/retrain.sh");
+    console.log("Training started...");
 }
 
 prompt();
