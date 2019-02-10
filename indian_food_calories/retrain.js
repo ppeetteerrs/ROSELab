@@ -2,10 +2,7 @@ import inquirer from "inquirer";
 import shelljs from "shelljs";
 import path from "path";
 import fs from "fs";
-import debug from "debug";
 import moment from "moment";
-
-const logger = debug("retrain");
 const options = {
     tensorboard: [],
     retrainPy: []
@@ -19,7 +16,6 @@ function getTrainedModels() {
 async function prompt() {
     let {
         name,
-        updateRepo,
         imageDir,
         tfhubModule,
         trainBatchSize,
@@ -35,11 +31,6 @@ async function prompt() {
         name: "name",
         message: "What is the name of this run?",
         default: moment().format('YYYY-MM-DD-hh:mm:ss')
-    }, {
-        type: "confirm",
-        name: "updateRepo",
-        message: "Would you like to pull changes from GitHub?",
-        default: true
     }, {
         type: "input",
         name: "imageDir",
@@ -92,16 +83,8 @@ async function prompt() {
         message: "How many training steps?",
         default: 20000
     }]);
-    if(updateRepo) {
-        await gitUpdate();
-    }
     let fullName = getDirName(name, tfhubModule.name);
     generateCommand(fullName, imageDir, tfhubModule, trainBatchSize, valBatchSize, flipImage, randomScale, randomCrop, randomBrightness, trainingSteps);
-}
-
-async function gitUpdate() {
-    logger("Pulling from git...");
-    await shelljs.exec("git pull");
 }
 
 function getDirName(name, model) {
@@ -109,9 +92,10 @@ function getDirName(name, model) {
 }
 
 function generateCommand(fullName, imageDir, tfhubModule, trainBatchSize, valBatchSize, flipImage, randomScale, randomCrop, randomBrightness, trainingSteps) {
-    let commandString = `python scripts/retrain.py  --image_dir ${imageDir} --tfhub_module ${tfhubModule.url} --saved_model_dir ./retrained/models/${fullName}/model --bottleneck_dir ./retrained/bottlenecks/${tfhubModule.name} --how_many_training_steps=${trainingSteps} --train_batch_size=${trainBatchSize} --validation_batch_size=${valBatchSize} --summaries_dir ./retrained/logs/${fullName} --output_labels ./retrained/models/${fullName}/labels.txt --intermediate_store_frequency=1000 --intermediate_output_graphs_dir ./retrained/models/${fullName}/intermediate --output_graph ./retrained/models/${fullName}/graph.pb ${flipImage ? "--flip_left_right " : ""}--random_crop=${randomCrop} --random_scale=${randomScale} --random_brightness=${randomBrightness}`;
-    logger("Training started...");
-    Promise.all([shelljs.exec(commandString), shelljs.exec(`tensorboard --logdir ./retrained/logs/${fullName}`)]);
+    let tfCommandString = `python scripts/retrain.py --image_dir ${imageDir} --tfhub_module ${tfhubModule.url} --saved_model_dir ./retrained/models/${fullName}/model --bottleneck_dir ./retrained/bottlenecks/${tfhubModule.name} --how_many_training_steps=${trainingSteps} --train_batch_size=${trainBatchSize} --validation_batch_size=${valBatchSize} --summaries_dir ./retrained/logs/${fullName} --output_labels ./retrained/models/${fullName}/labels.txt --intermediate_store_frequency=1000 --intermediate_output_graphs_dir ./retrained/models/${fullName}/intermediate --output_graph ./retrained/models/${fullName}/graph.pb ${flipImage ? "--flip_left_right " : ""}--random_crop=${randomCrop} --random_scale=${randomScale} --random_brightness=${randomBrightness}`;
+    console.log("Training started...");
+    let tbCommandString = `tensorboard --logdir ./retrained/logs/${fullName}`;
+    fs.writeFileSync(path.join(__dirname, 'retrained/retrain.sh'), "#!/usr/bin/env bash\n" + tfCommandString + " && " + tbCommandString);
 }
 
 prompt();
