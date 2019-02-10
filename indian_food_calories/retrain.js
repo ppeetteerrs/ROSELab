@@ -41,12 +41,31 @@ async function prompt() {
         name: "tfhubModule",
         message: "What is the model name?",
         choices: [{
-            name: "mobilenetV2",
+            name: "mobilenetV2_140",
             value: {
                 name: "mobilenetV2",
                 url: "https://tfhub.dev/google/imagenet/mobilenet_v2_140_224/feature_vector/2"
             }
-        }]
+        },{
+            name: "inceptionV3",
+            value: {
+                name: "inceptionV3",
+                url: "https://tfhub.dev/google/imagenet/inception_v3/feature_vector/1"
+            }
+        },{
+            name: "mobilenetV1_100",
+            value: {
+                name: "mobilenetV1_100",
+                url: "https://tfhub.dev/google/imagenet/mobilenet_v1_100_224/feature_vector/1"
+            }
+        },{
+            name: "resnetV2_50",
+            value: {
+                name: "resnetV2_50",
+                url: "hhttps://tfhub.dev/google/imagenet/resnet_v2_50/feature_vector/1"
+            }
+        }
+    ]
     }, {
         type: "input",
         name: "trainBatchSize",
@@ -94,8 +113,8 @@ function getDirName(name, model) {
 async function generateCommand(fullName, imageDir, tfhubModule, trainBatchSize, valBatchSize, flipImage, randomScale, randomCrop, randomBrightness, trainingSteps) {
     let tfCommandString = `python scripts/retrain.py --image_dir ${imageDir} --tfhub_module ${tfhubModule.url} --saved_model_dir ./retrained/models/${fullName}/model --bottleneck_dir ./retrained/bottlenecks/${tfhubModule.name} --how_many_training_steps=${trainingSteps} --train_batch_size=${trainBatchSize} --validation_batch_size=${valBatchSize} --summaries_dir ./retrained/logs/${fullName} --output_labels ./retrained/models/${fullName}/labels.txt --intermediate_store_frequency=1000 --intermediate_output_graphs_dir ./retrained/models/${fullName}/intermediate --output_graph ./retrained/models/${fullName}/graph.pb ${flipImage ? "--flip_left_right " : ""}--random_crop=${randomCrop} --random_scale=${randomScale} --random_brightness=${randomBrightness}`;
     let tbCommandString = `tensorboard --logdir ./retrained/logs/${fullName}`;
-    fs.writeFileSync(path.join(__dirname, 'retrained/retrain.sh'), "#!/usr/bin/env bash\n" + tfCommandString + " && " + tbCommandString);
-    await shelljs.exec("pm2 start retrained/retrain.sh");
+    fs.writeFileSync(path.join(__dirname, `retrained/scripts/${fullName}.sh`), "#!/usr/bin/env bash\n" + tfCommandString + " && " + tbCommandString);
+    await shelljs.exec(`pm2 start retrained/scripts/${fullName}.sh`);
     console.log("Training started...");
 }
 
