@@ -9,3 +9,4 @@ node_modules
 retrained/logs
 retrained/models
 retrained/bottlenecks
+retrained/scripts/*.sh
