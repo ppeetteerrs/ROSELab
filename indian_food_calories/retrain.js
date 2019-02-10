@@ -16,6 +16,7 @@ function getTrainedModels() {
 async function prompt() {
     let {
         name,
+        CUDA,
         imageDir,
         tfhubModule,
         trainBatchSize,
@@ -31,6 +32,12 @@ async function prompt() {
         name: "name",
         message: "What is the name of this run?",
         default: moment().format('YYYY-MM-DD-hh:mm:ss')
+    },{
+        type: "list",
+        name: "CUDA",
+        message: "Which CUDA device to use?",
+        choices: [0,1,2,3],
+        default: 0
     }, {
         type: "input",
         name: "imageDir",
@@ -103,7 +110,7 @@ async function prompt() {
         default: 20000
     }]);
     let fullName = getDirName(name, tfhubModule.name);
-    await generateCommand(fullName, imageDir, tfhubModule, trainBatchSize, valBatchSize, flipImage, randomScale, randomCrop, randomBrightness, trainingSteps);
+    await generateCommand(fullName, CUDA, imageDir, tfhubModule, trainBatchSize, valBatchSize, flipImage, randomScale, randomCrop, randomBrightness, trainingSteps);
 }
 
 function getDirName(name, model) {
@@ -114,7 +121,7 @@ async function generateCommand(fullName, imageDir, tfhubModule, trainBatchSize, 
     let tfCommandString = `python scripts/retrain.py --image_dir ${imageDir} --tfhub_module ${tfhubModule.url} --saved_model_dir ./retrained/models/${fullName}/model --bottleneck_dir ./retrained/bottlenecks/${tfhubModule.name} --how_many_training_steps=${trainingSteps} --train_batch_size=${trainBatchSize} --validation_batch_size=${valBatchSize} --summaries_dir ./retrained/logs/${fullName} --output_labels ./retrained/models/${fullName}/labels.txt --intermediate_store_frequency=1000 --intermediate_output_graphs_dir ./retrained/models/${fullName}/intermediate --output_graph ./retrained/models/${fullName}/graph.pb ${flipImage ? "--flip_left_right " : ""}--random_crop=${randomCrop} --random_scale=${randomScale} --random_brightness=${randomBrightness}`;
     let tbCommandString = `tensorboard --logdir ./retrained/logs/${fullName}`;
     fs.writeFileSync(path.join(__dirname, `retrained/scripts/${fullName}.sh`), "#!/usr/bin/env bash\n" + tbCommandString + " && " + tfCommandString);
-    await shelljs.exec(`pm2 start retrained/scripts/${fullName}.sh`);
+    await shelljs.exec(`CUDA_VISIBLE_DEVICES=${CUDA} pm2 start retrained/scripts/${fullName}.sh`);
     console.log("Training started...");
 }
 
