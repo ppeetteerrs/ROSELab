@@ -5,4 +5,7 @@ __pycache__
 log
 trained_models
 graphs
-retrained
+node_modules
+retrained/logs
+retrained/models
+retrained/bottlenecks
