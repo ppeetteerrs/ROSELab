@@ -36,8 +36,8 @@ async function prompt() {
         type: "list",
         name: "CUDA",
         message: "Which CUDA device to use?",
-        choices: [0,1,2,3],
-        default: 0
+        choices: ["0","1","2","3"],
+        default: "0"
     }, {
         type: "input",
         name: "imageDir",
