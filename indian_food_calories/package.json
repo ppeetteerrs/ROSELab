@@ -1,0 +1,23 @@
+{
+  "name": "indian-food-calories",
+  "version": "1.0.0",
+  "description": "Helper to execute hooks and scripts",
+  "main": "run.js",
+  "dependencies": {
+    "colors": "^1.3.3",
+    "inquirer": "^6.2.2",
+    "moment": "^2.24.0",
+    "shelljs": "^0.8.3"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.2.3",
+    "@babel/core": "^7.2.2",
+    "@babel/node": "^7.2.2",
+    "@babel/preset-env": "^7.3.1"
+  },
+  "scripts": {
+    "retrain": "babel-node retrain.js"
+  },
+  "author": "Peter Yuen",
+  "license": "ISC"
+}

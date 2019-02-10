@@ -1,2 +1,0 @@
-#!/usr/bin/env bash
-git pull && rm -rf retrained/retrain_logs && tensorboard --logdir retrained/retrain_logs && python retrain.py --image_dir ./Indian50Resized --tfhub_module https://tfhub.dev/google/imagenet/mobilenet_v2_140_224/feature_vector/2 --validation_batch_size=-1 --train_batch_size=64 --flip_left_right True --random_scale=30 --random_brightness=30 --how_many_training_steps=10000
