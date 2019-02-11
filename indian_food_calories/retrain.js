@@ -123,7 +123,7 @@ async function generateCommand(fullName, CUDA, imageDir, tfhubModule, trainBatch
     fs.writeFileSync(path.join(__dirname, `retrained/scripts/${fullName}.sh`), "#!/usr/bin/env bash\n" + tfCommandString);
     await shelljs.exec(`pm2 start launch_tf_board.sh`);
     console.log("Tensorboard started...");
-    await shelljs.exec(`CUDA_VISIBLE_DEVICES=${CUDA} pm2 start retrained/scripts/${fullName}.sh`);
+    await shelljs.exec(`CUDA_VISIBLE_DEVICES=${CUDA} pm2 start retrained/scripts/${fullName}.sh --no-autorestart`);
     console.log("Training started...");
 }
 
